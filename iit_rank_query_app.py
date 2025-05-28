@@ -118,6 +118,7 @@ if st.button("Find Eligible Programs"):
         )
         
         table1_df = df[table1_filter]
+        display_table_with_sections(table1_df, rank, "All Eligible Programmes")
         
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
