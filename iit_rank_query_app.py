@@ -36,13 +36,10 @@ def create_status_column(df, rank, opening_down_limit=None):
         or_val = row['OR']
         cr_val = row['CR']
         
-        # Aspirational: OR is 300 less than rank (OR >= rank-300 and OR < rank)
-        if or_val >= (rank - 300) and or_val < rank:
+        if cr_val >= (rank - 300) and cr_val < rank:
             return 'Aspirational'
-        # Fitting: OR <= rank <= CR
         elif or_val <= rank <= cr_val:
             return 'Fitting'
-        # Opening Down: OR > rank (with limit for table 1, unlimited for tables 2&3)
         elif or_val > rank:
             if opening_down_limit is None or or_val <= (rank + opening_down_limit):
                 return 'Opening Down'
@@ -51,34 +48,27 @@ def create_status_column(df, rank, opening_down_limit=None):
     return df.apply(get_status, axis=1)
 
 def display_table_with_sections(df, rank, table_name, opening_down_limit=None):
-    """Display table with three sections: Aspirational, Fitting, Opening Down"""
     if df.empty:
         st.info(f"No programs available for {table_name}.")
         return
     
-    # Add status column
     df_with_status = df.copy()
     df_with_status['Status'] = create_status_column(df, rank, opening_down_limit)
     
-    # Filter out None status rows
     df_with_status = df_with_status.dropna(subset=['Status'])
     
     if df_with_status.empty:
         st.info(f"No programs available for {table_name} within the specified criteria.")
         return
     
-    # Define the order for sorting
     status_order = {'Fitting': 1, 'Aspirational': 2, 'Opening Down': 3}
     df_with_status['Status_Order'] = df_with_status['Status'].map(status_order)
     
-    # Sort by Status_Order first, then by OR within each status
     df_sorted = df_with_status.sort_values(['Status_Order', 'OR'])
     
-    # Display columns
     display_columns = ["Institute", "Program", "OR", "CR", "Status"]
     available_display_columns = [col for col in display_columns if col in df_sorted.columns]
     
-    # Remove the temporary sorting column
     df_display = df_sorted[available_display_columns].reset_index(drop=True)
     
     st.markdown(f"**{len(df_display)} programs found for {table_name}:**")
@@ -101,33 +91,78 @@ if st.button("Find Eligible Programs"):
             st.write("Available columns:", df.columns.tolist())
             st.stop()
         
-        # Base filter for all tables
         base_filter = (
             (df["Seat Type"].str.upper() == category.upper()) &
             (df["Gender"].str.contains(gender, case=False, na=False))
         )
         
-        # Table 1: All eligible programs with 500 rank limit for Opening Down
         st.subheader("🎯 All Eligible Programs")
-        st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
         
         table1_filter = base_filter & (
-            # Aspirational: OR >= rank-300 and OR < rank
-            ((df["OR"] >= (rank - 300)) & (df["OR"] < rank)) |
-            # Fitting: OR <= rank <= CR
+            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
             ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-            # Opening Down: OR > rank and OR <= rank+500
             ((df["OR"] > rank) & (df["OR"] <= (rank + 500)))
         )
         
         table1_df = df[table1_filter]
-        display_table_with_sections(table1_df, rank, "All Eligible Programs", 500)
         
-        # Table 2: Circuital programmes (unlimited Opening Down)
+        if not table1_df.empty:
+            table1_df_with_status = table1_df.copy()
+            table1_df_with_status['Status'] = create_status_column(table1_df, rank, 500)
+            table1_df_with_status = table1_df_with_status.dropna(subset=['Status'])
+            
+            if not table1_df_with_status.empty:
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    colleges = ['All'] + sorted(table1_df_with_status['Institute'].unique().tolist())
+                    selected_college = st.selectbox("Filter by College:", colleges, key="college_filter")
+                
+                with col2:
+                    programs = ['All'] + sorted(table1_df_with_status['Program'].unique().tolist())
+                    selected_program = st.selectbox("Filter by Program:", programs, key="program_filter")
+                
+                with col3:
+                    statuses = ['All'] + sorted(table1_df_with_status['Status'].unique().tolist())
+                    selected_status = st.selectbox("Filter by Status:", statuses, key="status_filter")
+                filtered_df = table1_df_with_status.copy()
+                
+                if selected_college != 'All':
+                    filtered_df = filtered_df[filtered_df['Institute'] == selected_college]
+                
+                if selected_program != 'All':
+                    filtered_df = filtered_df[filtered_df['Program'] == selected_program]
+                
+                if selected_status != 'All':
+                    filtered_df = filtered_df[filtered_df['Status'] == selected_status]
+                
+            
+                if not filtered_df.empty:
+                   
+                    status_order = {'Fitting': 1, 'Aspirational': 2, 'Opening Down': 3}
+                    filtered_df['Status_Order'] = filtered_df['Status'].map(status_order)
+                    
+                    df_sorted = filtered_df.sort_values(['Status_Order', 'OR'])
+                   
+                    display_columns = ["Institute", "Program", "OR", "CR", "Status"]
+                    available_display_columns = [col for col in display_columns if col in df_sorted.columns]
+                    
+                    df_display = df_sorted[available_display_columns].reset_index(drop=True)
+                    
+                    st.markdown(f"**{len(df_display)} programs found for All Eligible Programs:**")
+                    st.dataframe(df_display, hide_index=True)
+                else:
+                    st.info("No programs match the selected filters.")
+            else:
+                st.info("No programs available for All Eligible Programs within the specified criteria.")
+        else:
+            st.info("No programs available for All Eligible Programs.")
+        
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
         st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, and Mathematics programmes")
-        st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
         
         circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics']
         circuital_pattern = '|'.join(circuital_keywords)
@@ -135,18 +170,14 @@ if st.button("Find Eligible Programs"):
         table2_filter = base_filter & (
             df["Program"].str.contains(circuital_pattern, case=False, na=False)
         ) & (
-            # Aspirational: OR >= rank-300 and OR < rank
-            ((df["OR"] >= (rank - 300)) & (df["OR"] < rank)) |
-            # Fitting: OR <= rank <= CR
+            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
             ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-            # Opening Down: OR > rank (unlimited)
             (df["OR"] > rank)
         )
         
         table2_df = df[table2_filter]
         display_table_with_sections(table2_df, rank, "Circuital Programmes")
         
-        # Table 3: Old IITs branches (unlimited Opening Down)
         st.markdown("---")
         st.subheader("🏛️ Old 7 IITs Branches")
         st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
@@ -158,11 +189,8 @@ if st.button("Find Eligible Programs"):
         table3_filter = base_filter & (
             df["Institute"].str.contains(old_iits_pattern, case=False, na=False)
         ) & (
-            # Aspirational: OR >= rank-300 and OR < rank
             ((df["OR"] >= (rank - 300)) & (df["OR"] < rank)) |
-            # Fitting: OR <= rank <= CR
             ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-            # Opening Down: OR > rank (unlimited)
             (df["OR"] > rank)
         )
         
