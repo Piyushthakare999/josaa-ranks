@@ -36,7 +36,7 @@ def create_status_column(df, rank, opening_down_limit=None):
         or_val = row['OR']
         cr_val = row['CR']
         
-        if cr_val >= (rank - 300) and cr_val < rank:
+        if cr_val <= (rank - 300) and cr_val < rank:
             return 'Aspirational'
         elif or_val <= rank <= cr_val:
             return 'Fitting'
