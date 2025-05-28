@@ -30,6 +30,18 @@ year = st.selectbox("Select year", ["2022", "2023", "2024"])
 category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
+with st.expander("ℹ️ Help"):
+    st.markdown("""
+    - **OR** = Opening Rank  
+    - **CR** = Closing Rank  
+    - **Status**:
+        - *Aspirational* — CR is between (Rank - 300) and (Rank - 1)  
+        - *Fitting* — OR ≤ Rank ≤ CR  
+        - *Opening Down* — OR is greater than Rank but still close  
+    - **Tip:** Double-click a column header in the table to sort by that column, and hover over the upper right edge to download the table or view it in fullscreen.
+    """)
+
+
 def create_status_column(df, rank, opening_down_limit=None):
     """Create status column with Aspirational, Fitting, Opening Down categories"""
     def get_status(row):
