@@ -20,10 +20,10 @@ df_2022, df_2023, df_2024 = load_data()
 if df_2022 is None or df_2023 is None or df_2024 is None:
     st.stop()
 
-st.title("<center>IIT College & Branch Finder</center>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🎓 IIT College & Branch Finder</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Enter your rank to see eligible colleges and programs based on category and gender.</p>", unsafe_allow_html=True)
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
 st.markdown("<center><sub>Created by Musaib Bin Bashir</sub></center>", unsafe_allow_html=True)
-st.markdown("Enter your rank to see eligible colleges and programs based on category and gender.")
 
 rank = st.number_input("Enter your rank", min_value=1, value=1)
 year = st.selectbox("Select year", ["2022", "2023", "2024"])
