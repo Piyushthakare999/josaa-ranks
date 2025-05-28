@@ -36,7 +36,7 @@ def create_status_column(df, rank, opening_down_limit=None):
         or_val = row['OR']
         cr_val = row['CR']
         
-        if cr_val <= (rank - 300) and cr_val < rank:
+        if (rank - 300) <= cr_val < rank:
             return 'Aspirational'
         elif or_val <= rank <= cr_val:
             return 'Fitting'
@@ -106,58 +106,6 @@ if st.button("Find Eligible Programs"):
         )
         
         table1_df = df[table1_filter]
-        
-        if not table1_df.empty:
-            table1_df_with_status = table1_df.copy()
-            table1_df_with_status['Status'] = create_status_column(table1_df, rank, 500)
-            table1_df_with_status = table1_df_with_status.dropna(subset=['Status'])
-            
-            if not table1_df_with_status.empty:
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    colleges = ['All'] + sorted(table1_df_with_status['Institute'].unique().tolist())
-                    selected_college = st.selectbox("Filter by College:", colleges, key="college_filter")
-                
-                with col2:
-                    programs = ['All'] + sorted(table1_df_with_status['Program'].unique().tolist())
-                    selected_program = st.selectbox("Filter by Program:", programs, key="program_filter")
-                
-                with col3:
-                    statuses = ['All'] + sorted(table1_df_with_status['Status'].unique().tolist())
-                    selected_status = st.selectbox("Filter by Status:", statuses, key="status_filter")
-                filtered_df = table1_df_with_status.copy()
-                
-                if selected_college != 'All':
-                    filtered_df = filtered_df[filtered_df['Institute'] == selected_college]
-                
-                if selected_program != 'All':
-                    filtered_df = filtered_df[filtered_df['Program'] == selected_program]
-                
-                if selected_status != 'All':
-                    filtered_df = filtered_df[filtered_df['Status'] == selected_status]
-                
-            
-                if not filtered_df.empty:
-                   
-                    status_order = {'Fitting': 1, 'Aspirational': 2, 'Opening Down': 3}
-                    filtered_df['Status_Order'] = filtered_df['Status'].map(status_order)
-                    
-                    df_sorted = filtered_df.sort_values(['Status_Order', 'OR'])
-                   
-                    display_columns = ["Institute", "Program", "OR", "CR", "Status"]
-                    available_display_columns = [col for col in display_columns if col in df_sorted.columns]
-                    
-                    df_display = df_sorted[available_display_columns].reset_index(drop=True)
-                    
-                    st.markdown(f"**{len(df_display)} programs found for All Eligible Programs:**")
-                    st.dataframe(df_display, hide_index=True)
-                else:
-                    st.info("No programs match the selected filters.")
-            else:
-                st.info("No programs available for All Eligible Programs within the specified criteria.")
-        else:
-            st.info("No programs available for All Eligible Programs.")
         
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
