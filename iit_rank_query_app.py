@@ -31,3 +31,6 @@ if st.button("Find Eligible Programs"):
         st.success(f"Found {len(filtered)} eligible programs:")
         st.dataframe(filtered[["Institute", "Program", "OR", "CR"]].sort_values("OR"))
 
+st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
+st.markdown("<center><sub>Created by Musaib Bin Bashir</sub></center>", unsafe_allow_html=True)
+
