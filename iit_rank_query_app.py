@@ -50,7 +50,7 @@ if st.button("Find Eligible Programs"):
         st.info("No circuital programmes available (programs with OR below your rank).")
     else:
         st.subheader("Circuital Programmes (Below Rank) Available")
-        st.markdown(f"**{len(circuital)} core engineering programmes with Opening Rank below your rank of {rank}:**")
+        st.markdown(f"**{len(circuital)} Circuital programmes with Opening Rank below your rank of {rank}:**")
         st.caption("Showing only: Computer Science, Electrical, Electronics, Artificial Intelligence, and Mathematics programmes")
         st.dataframe(circuital[["Institute", "Program", "OR", "CR"]].sort_values("OR"))
 
