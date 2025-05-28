@@ -34,7 +34,7 @@ if st.button("Find Eligible Programs"):
     circuital = df[
         (df["Seat Type"].str.upper() == category.upper()) &
         (df["Gender"].str.contains(gender, case=False)) &
-        (df["OR"] < rank) &
+        (df["OR"] > rank) &
         (df["Program"].str.contains(circuital_pattern, case=False, na=False))
     ]
     
