@@ -60,8 +60,8 @@ if st.button("Find Eligible Programs"):
         circuital = df[
             (df["Seat Type"].str.upper() == category.upper()) &
             (df["Gender"].str.contains(gender, case=False, na=False)) &
-            (df["OR"] > rank) &
-            (df["Program"].str.contains(circuital_pattern, case=False, na=False))
+            (df["Program"].str.contains(circuital_pattern, case=False, na=False)) &
+            ((df["OR"] > rank) | ((df["OR"] <= rank) & (df["CR"] >= rank)))
         ]
         
         old_iits = ['Bombay', 'Delhi', 'Kharagpur', 'Madras', 'Kanpur', 'Roorkee', 'Guwahati']
@@ -70,40 +70,52 @@ if st.button("Find Eligible Programs"):
         old_iits_branches = df[
             (df["Seat Type"].str.upper() == category.upper()) &
             (df["Gender"].str.contains(gender, case=False, na=False)) &
-            (df["OR"] >= rank) &
-            (df["Institute"].str.contains(old_iits_pattern, case=False, na=False))
+            (df["Institute"].str.contains(old_iits_pattern, case=False, na=False)) &
+            ((df["OR"] > rank) | ((df["OR"] <= rank) & (df["CR"] >= rank)))
         ]
         
         if filtered.empty:
             st.warning("No eligible programs found for the given criteria.")
         else:
-            st.success(f"Found {len(filtered)} eligible programs with OR<{rank}<CR:")
+            st.success(f"Found {len(filtered)} eligible programs with OR ≤ {rank} ≤ CR:")
             display_columns = ["Institute", "Program", "OR", "CR"]
             available_display_columns = [col for col in display_columns if col in df.columns]
             st.dataframe(filtered[available_display_columns].sort_values("OR"))
         
-        # Display circuital programmes
+
         st.markdown("---")
         if circuital.empty:
-            st.info("No circuital programmes available (core engineering programs with OR above your rank).")
+            st.info("No circuital programmes available.")
         else:
-            st.subheader("Circuital Programmes (OR>Rank) Available")
-            st.markdown(f"**{len(circuital)} Circuital programmes with Opening Rank above your rank of {rank}:**")
-            st.caption("Showing only: Computer Science, Electrical, Electronics, Artificial Intelligence, and Mathematics programmes")
+            st.subheader("Circuital Programmes Available")
+            st.markdown(f"**{len(circuital)} Circuital programmes (either eligible or with higher opening ranks):**")
+            st.caption("Showing: Computer Science, Electrical, Electronics, Artificial Intelligence, and Mathematics programmes")
+            st.caption("Includes both fitting programs (where you can get admission) and opening down programs (easier to get)")
             display_columns = ["Institute", "Program", "OR", "CR"]
             available_display_columns = [col for col in display_columns if col in df.columns]
-            st.dataframe(circuital[available_display_columns].sort_values("OR"))
+            
+            circuital_display = circuital[available_display_columns].copy()
+            circuital_display['Status'] = circuital_display.apply(
+                lambda row: 'Fitting' if (row['OR'] <= rank <= row['CR']) else 'Opening Down', axis=1
+            )
+            st.dataframe(circuital_display.sort_values("OR"))
         
         st.markdown("---")
         if old_iits_branches.empty:
-            st.info("No branches available at Old 7 IITs with OR >= your rank.")
+            st.info("No branches available at Old 7 IITs.")
         else:
             st.subheader("Branches Available at Old 7 IITs")
-            st.markdown(f"**{len(old_iits_branches)} programmes at old 7 IITs with Opening Rank >= your rank of {rank}:**")
+            st.markdown(f"**{len(old_iits_branches)} programmes at old 7 IITs (either eligible or with higher opening ranks):**")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
+            st.caption("Includes both fitting programs (where you can get admission) and opening down programs (easier to get)")
             display_columns = ["Institute", "Program", "OR", "CR"]
             available_display_columns = [col for col in display_columns if col in df.columns]
-            st.dataframe(old_iits_branches[available_display_columns].sort_values("OR"))
+            
+            old_iits_display = old_iits_branches[available_display_columns].copy()
+            old_iits_display['Status'] = old_iits_display.apply(
+                lambda row: 'Fitting' if (row['OR'] <= rank <= row['CR']) else 'Opening Down', axis=1
+            )
+            st.dataframe(old_iits_display.sort_values("OR"))
             
     except Exception as e:
         st.error(f"Error processing data: {e}")
