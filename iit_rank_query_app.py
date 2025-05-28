@@ -19,7 +19,7 @@ df_2023, df_2024 = load_data()
 if df_2023 is None or df_2024 is None:
     st.stop()
 
-st.title("🎓 IIT College & Branch Finder")
+st.title("IIT College & Branch Finder")
 st.markdown("Enter your rank to see eligible colleges and programs based on category and gender.")
 
 rank = st.number_input("Enter your rank", min_value=1, value=1)
@@ -29,8 +29,6 @@ gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
 if st.button("Find Eligible Programs"):
     df = df_2023 if year == "2023" else df_2024
-    
-    st.write("Debug - Column names:", df.columns.tolist())
     
     try:
         required_columns = ["Seat Type", "Gender", "OR", "CR", "Institute", "Program"]
