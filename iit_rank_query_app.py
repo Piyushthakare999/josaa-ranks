@@ -118,6 +118,7 @@ with st.expander("ℹ️ Help"):
         - *HS* = Home State quota
         - *AI* = All India Quota
         - Results will show both OS and HS quotas in the Quota column where applicable
+        - *NOTE*= For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank
     """)
 
 def create_status_column(df, rank, opening_down_limit=None):
@@ -251,6 +252,7 @@ if st.button("Find Eligible Programs"):
         st.subheader("🎯 All Recommended Programs")
         st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
         table1_filter = base_filter & (
@@ -264,11 +266,12 @@ if st.button("Find Eligible Programs"):
         
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
-        st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Mathematics, and Instrumentation programmes")
+        st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Data Science, Mathematics and Computing, Instrumentation and Computational Engineering programmes")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
-        circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation']
+        circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation', 'Computational', 'Circuit', 'Data Science', 'CSE']
         circuital_pattern = '|'.join(circuital_keywords)
         
         table2_filter = base_filter & (
@@ -288,6 +291,7 @@ if st.button("Find Eligible Programs"):
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
             st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+            st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
             st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
             
             old_iits = ['Bombay', 'Delhi', 'Kharagpur', 'Madras', 'Kanpur', 'Roorkee', 'Guwahati']
