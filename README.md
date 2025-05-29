@@ -84,6 +84,7 @@ A comprehensive Streamlit web application to help JEE candidates find eligible c
 - **Streamlit**: Web application framework
 - **Pandas**: Data manipulation and analysis
 - **NumPy**: Numerical computing
+- **BeautifulSoup**: JSON Data parsing
 
 
 ## 🤝 Contributing
@@ -93,6 +94,7 @@ A comprehensive Streamlit web application to help JEE candidates find eligible c
 3. Commit your changes (`git commit -m 'Add some NewFeature'`)
 4. Push to the branch (`git push origin feature/NewFeature`)
 5. Open a Pull Request
+6. NOTE: I've made a Jupyter notebook to parse the JSON data into a properly structured CSV, if you want that, drop me a mail at musaibbashir02@gmail.com
 
 ## 📄 License
 
