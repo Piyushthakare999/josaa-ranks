@@ -5,21 +5,21 @@ import numpy as np
 @st.cache_data
 def load_data():
     try:
-        df_iit_2022 = pd.read_csv("ranks2022.csv")
-        df_iit_2023 = pd.read_csv("ranks2023.csv")
-        df_iit_2024 = pd.read_csv("ranks2024.csv")
+        df_iit_2022 = pd.read_csv("data/ranks2022.csv")
+        df_iit_2023 = pd.read_csv("data/ranks2023.csv")
+        df_iit_2024 = pd.read_csv("data/ranks2024.csv")
         
-        df_nit_2022 = pd.read_csv("nits2022.csv")
-        df_nit_2023 = pd.read_csv("nits2023.csv")
-        df_nit_2024 = pd.read_csv("nits2024.csv")
+        df_nit_2022 = pd.read_csv("data/nits2022.csv")
+        df_nit_2023 = pd.read_csv("data/nits2023.csv")
+        df_nit_2024 = pd.read_csv("data/nits2024.csv")
         
-        df_iiit_2022 = pd.read_csv("IIITs2022.csv")
-        df_iiit_2023 = pd.read_csv("IIITs2023.csv")
-        df_iiit_2024 = pd.read_csv("IIITs2024.csv")
+        df_iiit_2022 = pd.read_csv("data/IIITs2022.csv")
+        df_iiit_2023 = pd.read_csv("data/IIITs2023.csv")
+        df_iiit_2024 = pd.read_csv("data/IIITs2024.csv")
         
-        df_gfti_2022 = pd.read_csv("GFTIs2022.csv")
-        df_gfti_2023 = pd.read_csv("GFTIs2023.csv")
-        df_gfti_2024 = pd.read_csv("GFTIs2024.csv")
+        df_gfti_2022 = pd.read_csv("data/GFTIs2022.csv")
+        df_gfti_2023 = pd.read_csv("data/GFTIs2023.csv")
+        df_gfti_2024 = pd.read_csv("data/GFTIs2024.csv")
         
         return {
             'IIT': {2022: df_iit_2022, 2023: df_iit_2023, 2024: df_iit_2024},
