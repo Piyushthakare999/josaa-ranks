@@ -185,6 +185,7 @@ if st.button("Find Eligible Programs"):
         st.subheader("🎯 All Recommended Programs")
         st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
         table1_filter = base_filter & (
             ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
@@ -199,6 +200,7 @@ if st.button("Find Eligible Programs"):
         st.subheader("⚡ Circuital Programmes")
         st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Mathematics, and Instrumentation programmes")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
         circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation']
         circuital_pattern = '|'.join(circuital_keywords)
@@ -219,6 +221,7 @@ if st.button("Find Eligible Programs"):
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
             st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+            st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
             
             old_iits = ['Bombay', 'Delhi', 'Kharagpur', 'Madras', 'Kanpur', 'Roorkee', 'Guwahati']
             old_iits_pattern = '|'.join(old_iits)
