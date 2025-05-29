@@ -209,14 +209,19 @@ def safe_numeric_filter(df, column, operator, value):
 
 if st.button("Find Eligible Programs"):
     try:
-        if institute_type == "ALL":
-            institute_types = ["IIT", "NIT", "IIIT", "GFTI"]
-            display_name = "All Engineering Colleges"
+        if exam_type == "JEE Advanced":
+            institute_types = ["IIT"]
+            display_name = "IITs"
+        elif institute_type == "ALL":
+            institute_types = ["NIT", "IIIT", "GFTI"]  # Exclude IIT for JEE Mains ALL
+            display_name = "All Engineering Colleges (NITs, IIITs, GFTIs)"
         else:
             institute_types = [institute_type.rstrip('s').upper()]  
             display_name = institute_type
         
-        if institute_type == "ALL":
+        if exam_type == "JEE Advanced":
+            df = get_combined_dataframe(year, institute_types, category, gender)
+        elif exam_type == "JEE Mains" and institute_type == "ALL":
             df = get_combined_dataframe(year, institute_types, category, gender)
         else:
             inst_key = institute_types[0]
@@ -278,7 +283,7 @@ if st.button("Find Eligible Programs"):
         display_table_with_sections(table2_df, rank, f"Circuital {display_name} Programmes")
         
 
-        if exam_type == "JEE Advanced" or (exam_type == "JEE Mains" and institute_type == "ALL"):
+        if exam_type == "JEE Advanced":
             st.markdown("---")
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
