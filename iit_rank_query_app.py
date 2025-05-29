@@ -72,7 +72,7 @@ st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir.</p>", unsafe_allow_html=True)
 
 exam_type = st.selectbox("Select exam", ["JEE Advanced", "JEE Mains"])
-rank = st.number_input(f"Enter your {exam_type} rank", min_value=1, value=1000)
+rank = st.number_input(f"Enter your {exam_type} rank (category rank, if applicable)", min_value=1, value=1000)
 year = st.selectbox("Select year", [2022, 2023, 2024])
 
 if exam_type == "JEE Advanced":
