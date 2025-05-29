@@ -81,7 +81,7 @@ if exam_type == "JEE Advanced":
 else:
     institute_type = st.selectbox("Select institute type", ["ALL", "NITs", "IIITs", "GFTIs"])
 
-category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST", "PWD"])
+category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST", "PwD"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
 with st.expander("ℹ️ Help"):
@@ -101,7 +101,7 @@ with st.expander("ℹ️ Help"):
         - *GFTIs* — Government Funded Technical Institutions
         - *ALL* — Shows combined results from all institute types
     - **Categories**:
-        - *PWD* — Persons with Disabilities (includes OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.)
+        - *PwD* — Persons with Disabilities (includes OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.)
         - Other categories work as usual
     - **Tips**: 
         - Double-click a column header in the table to sort by that column
@@ -204,9 +204,9 @@ def safe_numeric_filter(df, column, operator, value):
         return pd.Series([False] * len(df))
 
 def create_category_filter(df, category):
-    """Create appropriate filter for category including PWD support"""
-    if category == "PWD":
-        return df["Seat Type"].str.contains(r'\(PWD\)', case=False, na=False)
+    """Create appropriate filter for category including PwD support"""
+    if category == "PwD":
+        return df["Seat Type"].str.contains(r'\(PwD\)', case=False, na=False)
     else:
         return df["Seat Type"].str.upper() == category.upper()
 
@@ -254,8 +254,8 @@ if st.button("Find Eligible Programs"):
         st.subheader("🎯 All Recommended Programs")
         st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
-        if category == "PWD":
-            st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
+        if category == "PwD":
+            st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
@@ -272,8 +272,8 @@ if st.button("Find Eligible Programs"):
         st.subheader("⚡ Circuital Programmes")
         st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Data Science, Mathematics and Computing, Instrumentation and Computational Engineering programmes")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
-        if category == "PWD":
-            st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
+        if category == "PwD":
+            st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
@@ -297,8 +297,8 @@ if st.button("Find Eligible Programs"):
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
             st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
-            if category == "PWD":
-                st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
+            if category == "PwD":
+                st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
             st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
             st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
             
