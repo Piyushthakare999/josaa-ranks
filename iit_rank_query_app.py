@@ -1,25 +1,22 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
 @st.cache_data
 def load_data():
     try:
-
         df_iit_2022 = pd.read_csv("ranks2022.csv")
         df_iit_2023 = pd.read_csv("ranks2023.csv")
         df_iit_2024 = pd.read_csv("ranks2024.csv")
         
-
         df_nit_2022 = pd.read_csv("nits2022.csv")
         df_nit_2023 = pd.read_csv("nits2023.csv")
         df_nit_2024 = pd.read_csv("nits2024.csv")
         
-
         df_iiit_2022 = pd.read_csv("IIITs2022.csv")
         df_iiit_2023 = pd.read_csv("IIITs2023.csv")
         df_iiit_2024 = pd.read_csv("IIITs2024.csv")
         
-
         df_gfti_2022 = pd.read_csv("GFTIs2022.csv")
         df_gfti_2023 = pd.read_csv("GFTIs2023.csv")
         df_gfti_2024 = pd.read_csv("GFTIs2024.csv")
@@ -37,10 +34,43 @@ def load_data():
         st.error(f"Error loading data: {e}")
         return None
 
+def clean_rank_data(df):
+    if df is None or df.empty:
+        return df
+    
+
+    df_clean = df.copy()
+    
+
+    for col in ['OR', 'CR']:
+        if col in df_clean.columns:
+
+            df_clean[col] = df_clean[col].astype(str)
+            
+
+            df_clean[col] = df_clean[col].str.replace(r'[^\d.]', '', regex=True)
+            
+
+            df_clean[col] = df_clean[col].replace('', np.nan)
+            
+
+            df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+    
+
+    if 'OR' in df_clean.columns and 'CR' in df_clean.columns:
+        df_clean = df_clean.dropna(subset=['OR', 'CR'])
+    
+    return df_clean
+
 data_dict = load_data()
 
 if data_dict is None:
     st.stop()
+
+
+for inst_type in data_dict:
+    for year in data_dict[inst_type]:
+        data_dict[inst_type][year] = clean_rank_data(data_dict[inst_type][year])
 
 st.markdown("<h1 style='text-align: center;'>🎓 JOSAA College & Branch Finder</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Find eligible colleges and programs across IITs, NITs, IIITs, and GFTIs based on your rank, category, and gender.</p>", unsafe_allow_html=True)
@@ -82,16 +112,20 @@ with st.expander("ℹ️ Help"):
 
 def create_status_column(df, rank, opening_down_limit=None):
     def get_status(row):
-        or_val = row['OR']
-        cr_val = row['CR']
-        
-        if (rank - 300) <= cr_val < rank:
-            return 'Aspirational'
-        elif or_val <= rank <= cr_val:
-            return 'Fitting'
-        elif or_val > rank:
-            if opening_down_limit is None or or_val <= (rank + opening_down_limit):
-                return 'Opening Down'
+        try:
+            or_val = float(row['OR'])
+            cr_val = float(row['CR'])
+            
+            if (rank - 300) <= cr_val < rank:
+                return 'Aspirational'
+            elif or_val <= rank <= cr_val:
+                return 'Fitting'
+            elif or_val > rank:
+                if opening_down_limit is None or or_val <= (rank + opening_down_limit):
+                    return 'Opening Down'
+        except (ValueError, TypeError):
+
+            pass
         return None
     
     return df.apply(get_status, axis=1)
@@ -135,6 +169,9 @@ def get_combined_dataframe(year, institute_types, category, gender):
         if inst_type in data_dict and year in data_dict[inst_type]:
             df = data_dict[inst_type][year].copy()
             
+            if df is None or df.empty:
+                continue
+                
             df['Institute_Type'] = inst_type
             
             required_base_columns = ["Seat Type", "Gender", "OR", "CR", "Institute", "Program"]
@@ -145,6 +182,20 @@ def get_combined_dataframe(year, institute_types, category, gender):
             combined_df = pd.concat([combined_df, df], ignore_index=True)
     
     return combined_df
+
+def safe_numeric_filter(df, column, operator, value):
+    """Safely apply numeric filters, handling any remaining non-numeric values"""
+    try:
+        if operator == '>=':
+            return pd.to_numeric(df[column], errors='coerce') >= value
+        elif operator == '<=':
+            return pd.to_numeric(df[column], errors='coerce') <= value
+        elif operator == '>':
+            return pd.to_numeric(df[column], errors='coerce') > value
+        elif operator == '<':
+            return pd.to_numeric(df[column], errors='coerce') < value
+    except:
+        return pd.Series([False] * len(df))
 
 if st.button("Find Eligible Programs"):
     try:
@@ -188,9 +239,9 @@ if st.button("Find Eligible Programs"):
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
         table1_filter = base_filter & (
-            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-            ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-            ((df["OR"] > rank) & (df["OR"] <= (rank + 500)))
+            (safe_numeric_filter(df, "CR", ">=", rank - 300) & safe_numeric_filter(df, "CR", "<", rank)) |
+            (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
+            (safe_numeric_filter(df, "OR", ">", rank) & safe_numeric_filter(df, "OR", "<=", rank + 500))
         )
         
         table1_df = df[table1_filter]
@@ -208,9 +259,9 @@ if st.button("Find Eligible Programs"):
         table2_filter = base_filter & (
             df["Program"].str.contains(circuital_pattern, case=False, na=False)
         ) & (
-            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-            ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-            (df["OR"] > rank)
+            (safe_numeric_filter(df, "CR", ">=", rank - 300) & safe_numeric_filter(df, "CR", "<", rank)) |
+            (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
+            safe_numeric_filter(df, "OR", ">", rank)
         )
         
         table2_df = df[table2_filter]
@@ -229,9 +280,9 @@ if st.button("Find Eligible Programs"):
             table3_filter = base_filter & (
                 df["Institute"].str.contains(old_iits_pattern, case=False, na=False)
             ) & (
-                ((df["OR"] >= (rank - 300)) & (df["OR"] < rank)) |
-                ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-                (df["OR"] > rank)
+                (safe_numeric_filter(df, "OR", ">=", rank - 300) & safe_numeric_filter(df, "OR", "<", rank)) |
+                (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
+                safe_numeric_filter(df, "OR", ">", rank)
             )
             
             table3_df = df[table3_filter]
