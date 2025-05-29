@@ -35,6 +35,7 @@ def load_data():
         return None
 
 def clean_rank_data(df):
+    """Clean and convert OR and CR columns to numeric values"""
     if df is None or df.empty:
         return df
     
@@ -73,13 +74,20 @@ for inst_type in data_dict:
         data_dict[inst_type][year] = clean_rank_data(data_dict[inst_type][year])
 
 st.markdown("<h1 style='text-align: center;'>🎓 JOSAA College & Branch Finder</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Find eligible colleges and programs across IITs, NITs, IIITs, and GFTIs based on your rank, category, and gender.</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Find eligible colleges and programs across IITs, NITs, IIITs, and GFTIs based on your JEE rank, category, and gender.</p>", unsafe_allow_html=True)
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir.</p>", unsafe_allow_html=True)
 
-rank = st.number_input("Enter your rank", min_value=1, value=1000)
+exam_type = st.selectbox("Select exam", ["JEE Advanced", "JEE Mains"])
+rank = st.number_input(f"Enter your {exam_type} rank", min_value=1, value=1000)
 year = st.selectbox("Select year", [2022, 2023, 2024])
-institute_type = st.selectbox("Select institute type", ["ALL", "IITs", "NITs", "IIITs", "GFTIs"])
+
+if exam_type == "JEE Advanced":
+    institute_type = "IITs"
+    st.info("🎯 JEE Advanced: Showing IIT programs only")
+else:
+    institute_type = st.selectbox("Select institute type", ["ALL", "NITs", "IIITs", "GFTIs"])
+
 category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
@@ -91,8 +99,10 @@ with st.expander("ℹ️ Help"):
         - *Aspirational* — CR is between (Rank - 300) and (Rank - 1)  
         - *Fitting* — OR ≤ Rank ≤ CR  
         - *Opening Down* — OR is greater than Rank but still close  
-    - **Institute Types**:
-        - *IITs* — Indian Institutes of Technology
+    - **Exams**:
+        - *JEE Advanced* — For IIT admissions (shows IIT programs only)
+        - *JEE Mains* — For NIT, IIIT, GFTI admissions
+    - **Institute Types** (for JEE Mains):
         - *NITs* — National Institutes of Technology  
         - *IIITs* — Indian Institutes of Information Technology
         - *GFTIs* — Government Funded Technical Institutions
@@ -267,7 +277,8 @@ if st.button("Find Eligible Programs"):
         table2_df = df[table2_filter]
         display_table_with_sections(table2_df, rank, f"Circuital {display_name} Programmes")
         
-        if institute_type in ["IITs", "ALL"]:
+
+        if exam_type == "JEE Advanced" or (exam_type == "JEE Mains" and institute_type == "ALL"):
             st.markdown("---")
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
