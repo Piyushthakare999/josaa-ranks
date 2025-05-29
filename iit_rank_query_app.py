@@ -23,8 +23,9 @@ if df_2022 is None or df_2023 is None or df_2024 is None or df_nits_2024 is None
 
 st.markdown("<h1 style='text-align: center;'>🎓 IIT/NIT College & Branch Finder</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Enter your rank to see eligible colleges and programs based on category and gender.</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Note: NIT data is only available for year 2024.</p>", unsafe_allow_html=True)
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
-st.markdown("<center><sub>Created by Musaib Bin Bashir</sub></center>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir</p>", unsafe_allow_html=True)
 
 rank = st.number_input("Enter your rank", min_value=1, value=1000)
 year = st.selectbox("Select year", ["2022", "2023", "2024"])
