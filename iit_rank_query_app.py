@@ -182,7 +182,8 @@ if st.button("Find Eligible Programs"):
             (df["Gender"].str.contains(gender, case=False, na=False))
         )
         
-        st.subheader("🎯 All Eligible Programs")
+        st.subheader("🎯 All Recommended Programs")
+        st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
         
         table1_filter = base_filter & (
@@ -192,7 +193,7 @@ if st.button("Find Eligible Programs"):
         )
         
         table1_df = df[table1_filter]
-        display_table_with_sections(table1_df, rank, f"All Eligible {display_name} Programmes")
+        display_table_with_sections(table1_df, rank, f"All Recommended {display_name} Programmes")
         
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
