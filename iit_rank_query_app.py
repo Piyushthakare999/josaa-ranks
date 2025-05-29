@@ -35,7 +35,6 @@ def load_data():
         return None
 
 def clean_rank_data(df):
-    """Clean and convert OR and CR columns to numeric values"""
     if df is None or df.empty:
         return df
     
@@ -47,14 +46,8 @@ def clean_rank_data(df):
         if col in df_clean.columns:
 
             df_clean[col] = df_clean[col].astype(str)
-            
-
             df_clean[col] = df_clean[col].str.replace(r'[^\d.]', '', regex=True)
-            
-
             df_clean[col] = df_clean[col].replace('', np.nan)
-            
-
             df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
     
 
@@ -88,7 +81,7 @@ if exam_type == "JEE Advanced":
 else:
     institute_type = st.selectbox("Select institute type", ["ALL", "NITs", "IIITs", "GFTIs"])
 
-category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST"])
+category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST", "PWD"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
 with st.expander("ℹ️ Help"):
@@ -107,6 +100,9 @@ with st.expander("ℹ️ Help"):
         - *IIITs* — Indian Institutes of Information Technology
         - *GFTIs* — Government Funded Technical Institutions
         - *ALL* — Shows combined results from all institute types
+    - **Categories**:
+        - *PWD* — Persons with Disabilities (includes OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.)
+        - Other categories work as usual
     - **Tips**: 
         - Double-click a column header in the table to sort by that column
         - Hover over the upper right edge to download the table or view it in fullscreen.
@@ -195,7 +191,6 @@ def get_combined_dataframe(year, institute_types, category, gender):
     return combined_df
 
 def safe_numeric_filter(df, column, operator, value):
-    """Safely apply numeric filters, handling any remaining non-numeric values"""
     try:
         if operator == '>=':
             return pd.to_numeric(df[column], errors='coerce') >= value
@@ -208,13 +203,20 @@ def safe_numeric_filter(df, column, operator, value):
     except:
         return pd.Series([False] * len(df))
 
+def create_category_filter(df, category):
+    """Create appropriate filter for category including PWD support"""
+    if category == "PWD":
+        return df["Seat Type"].str.contains(r'\(PWD\)', case=False, na=False)
+    else:
+        return df["Seat Type"].str.upper() == category.upper()
+
 if st.button("Find Eligible Programs"):
     try:
         if exam_type == "JEE Advanced":
             institute_types = ["IIT"]
             display_name = "IITs"
         elif institute_type == "ALL":
-            institute_types = ["NIT", "IIIT", "GFTI"]  # Exclude IIT for JEE Mains ALL
+            institute_types = ["NIT", "IIIT", "GFTI"] 
             display_name = "All Engineering Colleges (NITs, IIITs, GFTIs)"
         else:
             institute_types = [institute_type.rstrip('s').upper()]  
@@ -245,13 +247,15 @@ if st.button("Find Eligible Programs"):
             st.stop()
         
         base_filter = (
-            (df["Seat Type"].str.upper() == category.upper()) &
+            create_category_filter(df, category) &
             (df["Gender"].str.contains(gender, case=False, na=False))
         )
         
         st.subheader("🎯 All Recommended Programs")
         st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        if category == "PWD":
+            st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
@@ -268,6 +272,8 @@ if st.button("Find Eligible Programs"):
         st.subheader("⚡ Circuital Programmes")
         st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Data Science, Mathematics and Computing, Instrumentation and Computational Engineering programmes")
         st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        if category == "PWD":
+            st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
@@ -291,6 +297,8 @@ if st.button("Find Eligible Programs"):
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
             st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+            if category == "PWD":
+                st.caption("*PWD Category*: Showing all PWD seats including OPEN(PWD), SC(PWD), OBC-NCL(PWD), etc.")
             st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
             st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
             
