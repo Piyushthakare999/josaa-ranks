@@ -42,7 +42,7 @@ data_dict = load_data()
 if data_dict is None:
     st.stop()
 
-st.markdown("<h1 style='text-align: center;'>🎓 Engineering College & Branch Finder</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🎓 JOSAA College & Branch Finder</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Find eligible colleges and programs across IITs, NITs, IIITs, and GFTIs based on your rank, category, and gender.</p>", unsafe_allow_html=True)
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir.</p>", unsafe_allow_html=True)
