@@ -4,40 +4,54 @@ import pandas as pd
 @st.cache_data
 def load_data():
     try:
-        df_2022 = pd.read_csv("ranks2022.csv")
-        df_2023 = pd.read_csv("ranks2023.csv")
-        df_2024 = pd.read_csv("ranks2024.csv")
-        df_nits_2024 = pd.read_csv("nits2024.csv")
-        return df_2022, df_2023, df_2024, df_nits_2024
+
+        df_iit_2022 = pd.read_csv("ranks2022.csv")
+        df_iit_2023 = pd.read_csv("ranks2023.csv")
+        df_iit_2024 = pd.read_csv("ranks2024.csv")
+        
+
+        df_nit_2022 = pd.read_csv("nits2022.csv")
+        df_nit_2023 = pd.read_csv("nits2023.csv")
+        df_nit_2024 = pd.read_csv("nits2024.csv")
+        
+
+        df_iiit_2022 = pd.read_csv("IIITs2022.csv")
+        df_iiit_2023 = pd.read_csv("IIITs2023.csv")
+        df_iiit_2024 = pd.read_csv("IIITs2024.csv")
+        
+
+        df_gfti_2022 = pd.read_csv("GFTIs2022.csv")
+        df_gfti_2023 = pd.read_csv("GFTIs2023.csv")
+        df_gfti_2024 = pd.read_csv("GFTIs2024.csv")
+        
+        return {
+            'IIT': {2022: df_iit_2022, 2023: df_iit_2023, 2024: df_iit_2024},
+            'NIT': {2022: df_nit_2022, 2023: df_nit_2023, 2024: df_nit_2024},
+            'IIIT': {2022: df_iiit_2022, 2023: df_iiit_2023, 2024: df_iiit_2024},
+            'GFTI': {2022: df_gfti_2022, 2023: df_gfti_2023, 2024: df_gfti_2024}
+        }
     except FileNotFoundError as e:
         st.error(f"CSV file not found: {e}")
-        return None, None, None, None
+        return None
     except Exception as e:
         st.error(f"Error loading data: {e}")
-        return None, None, None, None
+        return None
 
-df_2022, df_2023, df_2024, df_nits_2024 = load_data()
+data_dict = load_data()
 
-if df_2022 is None or df_2023 is None or df_2024 is None or df_nits_2024 is None:
+if data_dict is None:
     st.stop()
 
-st.markdown("<h1 style='text-align: center;'>🎓 IIT/NIT College & Branch Finder</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Enter your rank to see eligible colleges and programs based on category and gender.</p>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Note: NIT data is only available for year 2024.</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🎓 Engineering College & Branch Finder</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Find eligible colleges and programs across IITs, NITs, IIITs, and GFTIs based on your rank, category, and gender.</p>", unsafe_allow_html=True)
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir.</p>", unsafe_allow_html=True)
 
 rank = st.number_input("Enter your rank", min_value=1, value=1000)
-year = st.selectbox("Select year", ["2022", "2023", "2024"])
-
-if year == "2024":
-    institute_type = st.selectbox("Select institute type", ["IITs", "NITs"])
-else:
-    institute_type = "IITs" 
-
+year = st.selectbox("Select year", [2022, 2023, 2024])
+institute_type = st.selectbox("Select institute type", ["ALL", "IITs", "NITs", "IIITs", "GFTIs"])
 category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
-
 
 with st.expander("ℹ️ Help"):
     st.markdown("""
@@ -47,15 +61,24 @@ with st.expander("ℹ️ Help"):
         - *Aspirational* — CR is between (Rank - 300) and (Rank - 1)  
         - *Fitting* — OR ≤ Rank ≤ CR  
         - *Opening Down* — OR is greater than Rank but still close  
-    - **Tip:** Double-click a column header in the table to sort by that column, and hover over the upper right edge to download the table or view it in fullscreen.
+    - **Institute Types**:
+        - *IITs* — Indian Institutes of Technology
+        - *NITs* — National Institutes of Technology  
+        - *IIITs* — Indian Institutes of Information Technology
+        - *GFTIs* — Government Funded Technical Institutions
+        - *ALL* — Shows combined results from all institute types
+    - **Tips**: 
+        - Double-click a column header in the table to sort by that column
+        - Hover over the upper right edge to download the table or view it in fullscreen.
     """)
     
-    if year == "2024" and institute_type == "NITs":
-        st.markdown("""
-        - **OS** = Other State quota
-        - **HS** = Home State quota
-        - Results will show both OS and HS quotas in the Quota column
-        """)
+    st.markdown("""
+    - **Quota Types** (for NITs, IIITs, GFTIs):
+        - *OS* = Other State quota
+        - *HS* = Home State quota
+        - *AI* = All India Quota
+        - Results will show both OS and HS quotas in the Quota column where applicable
+    """)
 
 def create_status_column(df, rank, opening_down_limit=None):
     def get_status(row):
@@ -92,10 +115,11 @@ def display_table_with_sections(df, rank, table_name, opening_down_limit=None):
     
     df_sorted = df_with_status.sort_values(['Status_Order', 'OR'])
     
-
     display_columns = ["Institute", "Program", "OR", "CR", "Status"]
     if "Quota" in df_sorted.columns:
         display_columns = ["Institute", "Program", "Quota", "OR", "CR", "Status"]
+    if "Institute_Type" in df_sorted.columns:
+        display_columns = ["Institute_Type"] + display_columns
     
     available_display_columns = [col for col in display_columns if col in df_sorted.columns]
     
@@ -104,26 +128,52 @@ def display_table_with_sections(df, rank, table_name, opening_down_limit=None):
     st.markdown(f"**{len(df_display)} programs found for {table_name}:**")
     st.dataframe(df_display, hide_index=True)
 
-if st.button("Find Eligible Programs"):
-    if year == "2022":
-        df = df_2022
-    elif year == "2023":
-        df = df_2023
-    elif year == "2024" and institute_type == "IITs":
-        df = df_2024
-    else:  
-        df = df_nits_2024
+def get_combined_dataframe(year, institute_types, category, gender):
+    combined_df = pd.DataFrame()
     
+    for inst_type in institute_types:
+        if inst_type in data_dict and year in data_dict[inst_type]:
+            df = data_dict[inst_type][year].copy()
+            
+            df['Institute_Type'] = inst_type
+            
+            required_base_columns = ["Seat Type", "Gender", "OR", "CR", "Institute", "Program"]
+            if not all(col in df.columns for col in required_base_columns):
+                st.warning(f"Skipping {inst_type} {year} data due to missing columns")
+                continue
+            
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+    
+    return combined_df
+
+if st.button("Find Eligible Programs"):
     try:
-        if year == "2024" and institute_type == "NITs":
-            required_columns = ["Seat Type", "Gender", "Quota", "OR", "CR", "Institute", "Program"]
+        if institute_type == "ALL":
+            institute_types = ["IIT", "NIT", "IIIT", "GFTI"]
+            display_name = "All Engineering Colleges"
         else:
-            required_columns = ["Seat Type", "Gender", "OR", "CR", "Institute", "Program"]
+            institute_types = [institute_type.rstrip('s').upper()]  
+            display_name = institute_type
         
+        if institute_type == "ALL":
+            df = get_combined_dataframe(year, institute_types, category, gender)
+        else:
+            inst_key = institute_types[0]
+            if inst_key in data_dict and year in data_dict[inst_key]:
+                df = data_dict[inst_key][year].copy()
+            else:
+                st.error(f"Data not available for {institute_type} {year}")
+                st.stop()
+        
+        if df.empty:
+            st.error(f"No data available for the selected criteria")
+            st.stop()
+        
+        required_columns = ["Seat Type", "Gender", "OR", "CR", "Institute", "Program"]
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
-            st.error(f"Missing columns in CSV: {missing_columns}")
+            st.error(f"Missing columns in data: {missing_columns}")
             st.write("Available columns:", df.columns.tolist())
             st.stop()
         
@@ -132,70 +182,38 @@ if st.button("Find Eligible Programs"):
             (df["Gender"].str.contains(gender, case=False, na=False))
         )
         
-        if year == "2024" and institute_type == "NITs":
-            st.subheader("🎯 All Eligible Programs")
-            st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
-            
-            table_filter = base_filter & (
-                ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-                ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-                ((df["OR"] > rank) & (df["OR"] <= (rank + 500)))
-            )
-            
-            filtered_df = df[table_filter]
-            display_table_with_sections(filtered_df, rank, f"All Eligible {institute_type} Programmes")
-            
-            st.markdown("---")
-            st.subheader("⚡ Circuital Programmes")
-            st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Mathematics, and Instrumentation programmes")
-            st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
-            
-            circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation']
-            circuital_pattern = '|'.join(circuital_keywords)
-            
-            table2_filter = base_filter & (
-                df["Program"].str.contains(circuital_pattern, case=False, na=False)
-            ) & (
-                ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-                ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-                (df["OR"] > rank)
-            )
-            
-            table2_df = df[table2_filter]
-            display_table_with_sections(table2_df, rank, "Circuital Programmes")
-            
-        else:
-            st.subheader("🎯 All Eligible Programs")
-            st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
-            
-            table1_filter = base_filter & (
-                ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-                ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-                ((df["OR"] > rank) & (df["OR"] <= (rank + 500)))
-            )
-            
-            table1_df = df[table1_filter]
-            display_table_with_sections(table1_df, rank, "All Eligible Programmes")
-            
-            st.markdown("---")
-            st.subheader("⚡ Circuital Programmes")
-            st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Mathematics, and Instrumentation programmes")
-            st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
-            
-            circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation']
-            circuital_pattern = '|'.join(circuital_keywords)
-            
-            table2_filter = base_filter & (
-                df["Program"].str.contains(circuital_pattern, case=False, na=False)
-            ) & (
-                ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
-                ((df["OR"] <= rank) & (df["CR"] >= rank)) |
-                (df["OR"] > rank)
-            )
-            
-            table2_df = df[table2_filter]
-            display_table_with_sections(table2_df, rank, "Circuital Programmes")
-            
+        st.subheader("🎯 All Eligible Programs")
+        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        
+        table1_filter = base_filter & (
+            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
+            ((df["OR"] <= rank) & (df["CR"] >= rank)) |
+            ((df["OR"] > rank) & (df["OR"] <= (rank + 500)))
+        )
+        
+        table1_df = df[table1_filter]
+        display_table_with_sections(table1_df, rank, f"All Eligible {display_name} Programmes")
+        
+        st.markdown("---")
+        st.subheader("⚡ Circuital Programmes")
+        st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Mathematics, and Instrumentation programmes")
+        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        
+        circuital_keywords = ['Computer Science', 'Electrical', 'Electronics', 'Artificial', 'Mathematics', 'Instrumentation']
+        circuital_pattern = '|'.join(circuital_keywords)
+        
+        table2_filter = base_filter & (
+            df["Program"].str.contains(circuital_pattern, case=False, na=False)
+        ) & (
+            ((df["CR"] >= (rank - 300)) & (df["CR"] < rank)) |
+            ((df["OR"] <= rank) & (df["CR"] >= rank)) |
+            (df["OR"] > rank)
+        )
+        
+        table2_df = df[table2_filter]
+        display_table_with_sections(table2_df, rank, f"Circuital {display_name} Programmes")
+        
+        if institute_type in ["IITs", "ALL"]:
             st.markdown("---")
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
@@ -218,3 +236,4 @@ if st.button("Find Eligible Programs"):
     except Exception as e:
         st.error(f"Error processing data: {e}")
         st.write("Please check your CSV file format and column names.")
+        st.write("Error details:", str(e))
