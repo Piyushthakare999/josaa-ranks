@@ -38,19 +38,15 @@ def clean_rank_data(df):
     if df is None or df.empty:
         return df
     
-
     df_clean = df.copy()
     
-
     for col in ['OR', 'CR']:
         if col in df_clean.columns:
-
             df_clean[col] = df_clean[col].astype(str)
             df_clean[col] = df_clean[col].str.replace(r'[^\d.]', '', regex=True)
             df_clean[col] = df_clean[col].replace('', np.nan)
             df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
     
-
     if 'OR' in df_clean.columns and 'CR' in df_clean.columns:
         df_clean = df_clean.dropna(subset=['OR', 'CR'])
     
@@ -61,7 +57,6 @@ data_dict = load_data()
 if data_dict is None:
     st.stop()
 
-
 for inst_type in data_dict:
     for year in data_dict[inst_type]:
         data_dict[inst_type][year] = clean_rank_data(data_dict[inst_type][year])
@@ -71,6 +66,7 @@ st.markdown("<p style='text-align: center;'>Find eligible colleges and programs 
 st.markdown("""<hr style="margin-top: 2em;">""", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Created by Musaib Bin Bashir.</p>", unsafe_allow_html=True)
 
+# Main input fields
 exam_type = st.selectbox("Select exam", ["JEE Advanced", "JEE Mains"])
 rank = st.number_input(f"Enter your {exam_type} rank (category rank, if applicable)", min_value=1, value=1000)
 year = st.selectbox("Select year", [2022, 2023, 2024])
@@ -84,14 +80,39 @@ else:
 category = st.selectbox("Select category", ["OPEN", "EWS", "OBC-NCL", "SC", "ST", "PwD"])
 gender = st.selectbox("Select gender", ["Gender-Neutral", "Female-only"])
 
+# Add custom aspirational range input
+st.markdown("### 🎯 Custom Settings")
+col1, col2 = st.columns(2)
+with col1:
+    custom_aspirational = st.number_input(
+        "Aspirational range (ranks before your rank)", 
+        min_value=50, 
+        max_value=1000, 
+        value=300, 
+        step=50,
+        help="Programs with closing rank between (Your Rank - This Value) and (Your Rank - 1) will be marked as Aspirational"
+    )
+with col2:
+    opening_down_range = st.number_input(
+        "Opening Down range (ranks after your rank)", 
+        min_value=100, 
+        max_value=1000, 
+        value=500, 
+        step=50,
+        help="Programs with opening rank between (Your Rank + 1) and (Your Rank + This Value) will be marked as Opening Down"
+    )
+
 with st.expander("ℹ️ Help"):
     st.markdown("""
     - **OR** = Opening Rank  
     - **CR** = Closing Rank  
     - **Status**:
-        - *Aspirational* — CR is between (Rank - 300) and (Rank - 1)  
+        - *Aspirational* — CR is between (Rank - Custom Aspirational Range) and (Rank - 1)  
         - *Fitting* — OR ≤ Rank ≤ CR  
-        - *Opening Down* — OR is greater than Rank but still close  
+        - *Opening Down* — OR is greater than Rank but within the Opening Down range  
+    - **Custom Settings**:
+        - *Aspirational Range* — How many ranks before your rank to consider for aspirational programs
+        - *Opening Down Range* — How many ranks after your rank to consider for opening down programs
     - **Exams**:
         - *JEE Advanced* — For IIT admissions (shows IIT programs only)
         - *JEE Mains* — For NIT, IIIT, GFTI admissions
@@ -117,13 +138,13 @@ with st.expander("ℹ️ Help"):
         - *NOTE*= For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank
     """)
 
-def create_status_column(df, rank, opening_down_limit=None):
+def create_status_column(df, rank, custom_aspirational, opening_down_limit=None):
     def get_status(row):
         try:
             or_val = float(row['OR'])
             cr_val = float(row['CR'])
             
-            if (rank - 300) <= cr_val < rank:
+            if (rank - custom_aspirational) <= cr_val < rank:
                 return 'Aspirational'
             elif or_val <= rank <= cr_val:
                 return 'Fitting'
@@ -131,19 +152,18 @@ def create_status_column(df, rank, opening_down_limit=None):
                 if opening_down_limit is None or or_val <= (rank + opening_down_limit):
                     return 'Opening Down'
         except (ValueError, TypeError):
-
             pass
         return None
     
     return df.apply(get_status, axis=1)
 
-def display_table_with_sections(df, rank, table_name, opening_down_limit=None):
+def display_table_with_sections(df, rank, table_name, custom_aspirational, opening_down_limit=None):
     if df.empty:
         st.info(f"No programs available for {table_name}.")
         return
     
     df_with_status = df.copy()
-    df_with_status['Status'] = create_status_column(df, rank, opening_down_limit)
+    df_with_status['Status'] = create_status_column(df, rank, custom_aspirational, opening_down_limit)
     
     df_with_status = df_with_status.dropna(subset=['Status'])
     
@@ -253,25 +273,25 @@ if st.button("Find Eligible Programs"):
         
         st.subheader("🎯 All Recommended Programs")
         st.caption("Note: Recommended Programs include those program which satisfy OR< your rank < CR")
-        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+500")
+        st.caption(f"Aspirational: CR from rank-{custom_aspirational} to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: OR from rank+1 to rank+{opening_down_range}")
         if category == "PwD":
             st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
         st.caption("Scroll or open in fullscreen mode to see opening and closing ranks")
         
         table1_filter = base_filter & (
-            (safe_numeric_filter(df, "CR", ">=", rank - 300) & safe_numeric_filter(df, "CR", "<", rank)) |
+            (safe_numeric_filter(df, "CR", ">=", rank - custom_aspirational) & safe_numeric_filter(df, "CR", "<", rank)) |
             (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
-            (safe_numeric_filter(df, "OR", ">", rank) & safe_numeric_filter(df, "OR", "<=", rank + 500))
+            (safe_numeric_filter(df, "OR", ">", rank) & safe_numeric_filter(df, "OR", "<=", rank + opening_down_range))
         )
         
         table1_df = df[table1_filter]
-        display_table_with_sections(table1_df, rank, f"All Recommended {display_name} Programmes")
+        display_table_with_sections(table1_df, rank, f"All Recommended {display_name} Programmes", custom_aspirational, opening_down_range)
         
         st.markdown("---")
         st.subheader("⚡ Circuital Programmes")
         st.caption("Computer Science, Electrical, Electronics, Artificial Intelligence, Data Science, Mathematics and Computing, Instrumentation and Computational Engineering programmes")
-        st.caption("Aspirational: CR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+        st.caption(f"Aspirational: CR from rank-{custom_aspirational} to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
         if category == "PwD":
             st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
         st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
@@ -283,20 +303,19 @@ if st.button("Find Eligible Programs"):
         table2_filter = base_filter & (
             df["Program"].str.contains(circuital_pattern, case=False, na=False)
         ) & (
-            (safe_numeric_filter(df, "CR", ">=", rank - 300) & safe_numeric_filter(df, "CR", "<", rank)) |
+            (safe_numeric_filter(df, "CR", ">=", rank - custom_aspirational) & safe_numeric_filter(df, "CR", "<", rank)) |
             (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
             safe_numeric_filter(df, "OR", ">", rank)
         )
         
         table2_df = df[table2_filter]
-        display_table_with_sections(table2_df, rank, f"Circuital {display_name} Programmes")
+        display_table_with_sections(table2_df, rank, f"Circuital {display_name} Programmes", custom_aspirational)
         
-
         if exam_type == "JEE Advanced":
             st.markdown("---")
             st.subheader("🏛️ Old 7 IITs Branches")
             st.caption("Old IITs: Bombay, Delhi, Kharagpur, Madras, Kanpur, Roorkee, Guwahati")
-            st.caption("Aspirational: OR from rank-300 to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
+            st.caption(f"Aspirational: OR from rank-{custom_aspirational} to rank-1 | Fitting: OR ≤ rank ≤ CR | Opening Down: All available OR > rank")
             if category == "PwD":
                 st.caption("*PwD Category*: Showing all PwD seats including OPEN(PwD), SC(PwD), OBC-NCL(PwD), etc.")
             st.caption("*NOTE* = For programs with Reservations/Categories, the OR AND CR shown correspond to Category Rank")
@@ -308,13 +327,13 @@ if st.button("Find Eligible Programs"):
             table3_filter = base_filter & (
                 df["Institute"].str.contains(old_iits_pattern, case=False, na=False)
             ) & (
-                (safe_numeric_filter(df, "OR", ">=", rank - 300) & safe_numeric_filter(df, "OR", "<", rank)) |
+                (safe_numeric_filter(df, "OR", ">=", rank - custom_aspirational) & safe_numeric_filter(df, "OR", "<", rank)) |
                 (safe_numeric_filter(df, "OR", "<=", rank) & safe_numeric_filter(df, "CR", ">=", rank)) |
                 safe_numeric_filter(df, "OR", ">", rank)
             )
             
             table3_df = df[table3_filter]
-            display_table_with_sections(table3_df, rank, "Old 7 IITs Branches")
+            display_table_with_sections(table3_df, rank, "Old 7 IITs Branches", custom_aspirational)
             
     except Exception as e:
         st.error(f"Error processing data: {e}")
